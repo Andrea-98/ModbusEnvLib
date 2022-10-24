@@ -1,0 +1,14 @@
+dotenv
+dotenv.internal
+drivermodbus.datatypes
+drivermodbus.exceptions
+drivermodbus.modbusclient
+drivermodbus.modbusserver
+jssc
+ModbusEnvLib
+ModbusRTU
+scijava.nativelib
+slf4j
+slf4j.event
+slf4j.helpers
+slf4j.spi
