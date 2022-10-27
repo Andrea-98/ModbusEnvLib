@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="ModbusEnvLib.LibraryTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2022-10-27T06:28:06" hostname="DESKTOP-518NK4U" time="0.113">
+<testsuite name="ModbusEnvLib.LibraryTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2022-10-27T10:48:43" hostname="DESKTOP-518NK4U" time="0.07">
   <properties/>
-  <testcase name="someLibraryMethodReturnsTrue()" classname="ModbusEnvLib.LibraryTest" time="0.113"/>
+  <testcase name="someLibraryMethodReturnsTrue()" classname="ModbusEnvLib.LibraryTest" time="0.07"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>
