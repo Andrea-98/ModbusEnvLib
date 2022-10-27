@@ -54,7 +54,7 @@ public class ModbusEnvLib{
     public static void main(String[] args) {
 
             //// ----------TEST----------------//// 
-      /*      
+    /*        
             ModbusClient modbusClient = new ModbusClient("192.168.0.1",502);
 		try
 		{
