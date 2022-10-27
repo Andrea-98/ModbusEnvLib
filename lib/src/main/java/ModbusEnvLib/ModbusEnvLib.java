@@ -60,9 +60,11 @@ public class ModbusEnvLib{
         {
             modbusClient.Connect(); //per stabilire la connessione modbus tcp/ip
             System.out.println(modbusClient.ReadCoils(0, 1)[0]);  //funzione per legere i coils (ripetere per ogni coil da leggere, il numero compreso tra parentesi quadre lasciare sempre a zero)
-            System.out.println(modbusClient.ReadHoldingRegisters(0, 1)[0]); //funzione per legere gli holding register (ripetere per ogni holding register da leggere, il numero compreso tra parentesi quadre lasciare sempre a zero)
+            System.out.println(modbusClient.ReadHoldingRegisters(0, 1)[0]);
+            System.out.println(modbusClient.ReadHoldingRegisters(25, 1)[0]);//funzione per legere gli holding register (ripetere per ogni holding register da leggere, il numero compreso tra parentesi quadre lasciare sempre a zero)
             modbusClient.WriteSingleCoil(1, true);  //per scrivere su singolo coil
             modbusClient.WriteSingleRegister(2, 1234); //per scrivere su singolo registro
+
 		}
 		catch (Exception e)
 		{
