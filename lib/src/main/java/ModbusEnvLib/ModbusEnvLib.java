@@ -1,5 +1,7 @@
 package ModbusEnvLib;
 
+import drivermodbus.modbusclient.*;
+
 import dotenv.Dotenv;
 import dotenv.DotenvException;
 import dotenv.DotenvEntry;
@@ -12,8 +14,6 @@ import java.util.Map;
 
 import java.util.Iterator;
 import java.util.Set;
-
-import drivermodbus.modbusclient.*;
 
 
 public class ModbusEnvLib{
