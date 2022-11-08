@@ -55,15 +55,15 @@ public class ModbusEnvLib{
 
             //// ----------TEST----------------//// 
             
-        ModbusClient modbusClient = new ModbusClient("192.168.0.1",502);   // definire indirizzo ip e porta ( indirizzo ip è una stringa mentre la porta è un int)
+        ModbusClient modbusClient = new ModbusClient("192.168.0.1",502);   // define ip address and port (ip address is a string while the port is an int)
         try
         {
-            modbusClient.Connect(); //per stabilire la connessione modbus tcp/ip
-            System.out.println(modbusClient.ReadCoils(0, 1)[0]);  //funzione per legere i coils (ripetere per ogni coil da leggere, il numero compreso tra parentesi quadre lasciare sempre a zero)
+            modbusClient.Connect(); //to establish the Modbus TCP/IP connection
+            System.out.println(modbusClient.ReadCoils(0, 1)[0]);  //function to read the coils (repeat for each coil to be read, the number in square brackets always leave at zero)
             System.out.println(modbusClient.ReadHoldingRegisters(0, 1)[0]);
-            System.out.println(modbusClient.ReadHoldingRegisters(25, 1)[0]);//funzione per legere gli holding register (ripetere per ogni holding register da leggere, il numero compreso tra parentesi quadre lasciare sempre a zero)
-            modbusClient.WriteSingleCoil(1, true);  //per scrivere su singolo coil
-            modbusClient.WriteSingleRegister(2, 1234); //per scrivere su singolo registro
+            System.out.println(modbusClient.ReadHoldingRegisters(25, 1)[0]);//function to read the holding registers (repeat for each holding register to be read, the number in square brackets always leave at zero)
+            modbusClient.WriteSingleCoil(1, true);  //to write on a single coil
+            modbusClient.WriteSingleRegister(2, 1234); //to write to a single register
 
 		}
 		catch (Exception e)
