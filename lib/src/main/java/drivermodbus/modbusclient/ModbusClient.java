@@ -1233,6 +1233,168 @@ public class ModbusClient {
 
 		return (response);
 	}
+	
+	
+		/**
+	 * Read Input Registers from Server return string for lotus
+	 * 
+	 * @param startingAddress Fist Address to read; Shifted by -1
+	 * @param quantity        Number of Inputs to read
+	 * @return Input Registers from Server
+	 * @throws drivermodbus.exceptions.ModbusException
+	 * @throws UnknownHostException
+	 * @throws SocketException
+	 * @throws SerialPortTimeoutException
+	 * @throws SerialPortException
+	 */
+	
+		public String ReadHoldingRegistersSTR(int startingAddress, int quantity) throws drivermodbus.exceptions.ModbusException,
+			UnknownHostException, SocketException, IOException, SerialPortException, SerialPortTimeoutException {
+		if (tcpClientSocket == null)
+			throw new drivermodbus.exceptions.ConnectionException("connection Error");
+		if (startingAddress > 65535 | quantity > 125)
+			throw new IllegalArgumentException("Starting adress must be 0 - 65535; quantity must be 0 - 125");
+		int[] response = new int[quantity];
+		this.transactionIdentifier = toByteArray(0x0001);
+		this.protocolIdentifier = toByteArray(0x0000);
+		this.length = toByteArray(0x0006);
+		// serialdata = this.unitIdentifier;
+		this.functionCode = 0x03;
+		this.startingAddress = toByteArray(startingAddress);
+		this.quantity = toByteArray(quantity);
+
+		byte[] data = new byte[] {
+				this.transactionIdentifier[1],
+				this.transactionIdentifier[0],
+				this.protocolIdentifier[1],
+				this.protocolIdentifier[0],
+				this.length[1],
+				this.length[0],
+				this.unitIdentifier,
+				this.functionCode,
+				this.startingAddress[1],
+				this.startingAddress[0],
+				this.quantity[1],
+				this.quantity[0],
+				this.crc[0],
+				this.crc[1]
+		};
+
+		if (this.serialflag) {
+			crc = calculateCRC(data, 6, 6);
+			data[data.length - 2] = crc[0];
+			data[data.length - 1] = crc[1];
+		}
+		byte[] serialdata = null;
+		if (serialflag) {
+			serialdata = new byte[8];
+			java.lang.System.arraycopy(data, 6, serialdata, 0, 8);
+			serialPort.purgePort(SerialPort.PURGE_RXCLEAR);
+			serialPort.writeBytes(serialdata);
+			if (debug)
+				StoreLogData.getInstance().Store("Send Serial-Data: " + Arrays.toString(serialdata));
+			long dateTimeSend = DateTime.getDateTimeTicks();
+			byte receivedUnitIdentifier = (byte) 0xFF;
+			serialdata = new byte[256];
+			int expectedlength = 5 + 2 * quantity;
+			while (receivedUnitIdentifier != this.unitIdentifier
+					& !((DateTime.getDateTimeTicks() - dateTimeSend) > 10000 * this.connectTimeout)) {
+				serialdata = serialPort.readBytes(expectedlength, this.connectTimeout);
+
+				receivedUnitIdentifier = serialdata[0];
+			}
+			if (receivedUnitIdentifier != this.unitIdentifier) {
+				data = new byte[256];
+			}
+			if (serialdata != null) {
+				data = new byte[262];
+				System.arraycopy(serialdata, 0, data, 6, serialdata.length);
+				if (debug)
+					StoreLogData.getInstance().Store("Receive ModbusRTU-Data: " + Arrays.toString(data));
+			}
+			for (int i = 0; i < quantity; i++) {
+				byte[] bytes = new byte[2];
+				bytes[0] = data[3 + i * 2];
+				bytes[1] = data[3 + i * 2 + 1];
+				ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+				response[i] = byteBuffer.getShort();
+			}
+		}
+
+		if (tcpClientSocket.isConnected() | udpFlag) {
+			if (udpFlag) {
+				InetAddress ipAddress = InetAddress.getByName(this.ipAddress);
+				DatagramPacket sendPacket = new DatagramPacket(data, data.length, ipAddress, this.port);
+				DatagramSocket clientSocket = new DatagramSocket();
+				clientSocket.setSoTimeout(500);
+				clientSocket.send(sendPacket);
+				data = new byte[2100];
+				DatagramPacket receivePacket = new DatagramPacket(data, data.length);
+				clientSocket.receive(receivePacket);
+				clientSocket.close();
+				data = receivePacket.getData();
+			} else {
+				outStream.write(data, 0, data.length - 2);
+				if (debug)
+					StoreLogData.getInstance().Store("Send ModbusTCP-Data: " + Arrays.toString(data));
+				if (sendDataChangedListener.size() > 0) {
+					sendData = new byte[data.length - 2];
+					System.arraycopy(data, 0, sendData, 0, data.length - 2);
+					for (SendDataChangedListener hl : sendDataChangedListener)
+						hl.SendDataChanged();
+				}
+				data = new byte[2100];
+				int numberOfBytes = inStream.read(data, 0, data.length);
+				if (receiveDataChangedListener.size() > 0) {
+					receiveData = new byte[numberOfBytes];
+					System.arraycopy(data, 0, receiveData, 0, numberOfBytes);
+					for (ReceiveDataChangedListener hl : receiveDataChangedListener)
+						hl.ReceiveDataChanged();
+					if (debug)
+						StoreLogData.getInstance().Store("Receive ModbusTCP-Data: " + Arrays.toString(data));
+				}
+			}
+		}
+		if (((int) data[7]) == 0x83 & ((int) data[8]) == 0x01) {
+			if (debug)
+				StoreLogData.getInstance().Store("FunctionCodeNotSupportedException Throwed");
+			throw new drivermodbus.exceptions.FunctionCodeNotSupportedException(
+					"Function code not supported by master");
+		}
+		if (((int) data[7]) == 0x83 & ((int) data[8]) == 0x02) {
+			if (debug)
+				StoreLogData.getInstance().Store("Starting adress invalid or starting adress + quantity invalid");
+			throw new drivermodbus.exceptions.StartingAddressInvalidException(
+					"Starting adress invalid or starting adress + quantity invalid");
+		}
+		if (((int) data[7]) == 0x83 & ((int) data[8]) == 0x03) {
+			if (debug)
+				StoreLogData.getInstance().Store("Quantity invalid");
+			throw new drivermodbus.exceptions.QuantityInvalidException("Quantity invalid");
+		}
+		if (((int) data[7]) == 0x83 & ((int) data[8]) == 0x04) {
+			if (debug)
+				StoreLogData.getInstance().Store("Error reading");
+			throw new drivermodbus.exceptions.ModbusException("Error reading");
+		}
+		for (int i = 0; i < quantity; i++) {
+			byte[] bytes = new byte[2];
+			bytes[0] = data[9 + i * 2];
+			bytes[1] = data[9 + i * 2 + 1];
+			ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+
+			
+			//Couldn't pass arrays back to Lotusscript send string.
+			response[i] = byteBuffer.getShort();
+		}
+				String resultStr = "";
+				for (int i : response){
+					resultStr = resultStr + i + ",";
+				}
+
+		return resultStr;
+			}
+	
 
 	/**
 	 * Write Single Coil to Server
